@@ -54,7 +54,7 @@ jobs:
         run: pip install -r ./python/requirements.txt
 
       - name: Run Python Script
-        run: python path/to/your/script.py
+        run: python ./python/assignment-code.py
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
