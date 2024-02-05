@@ -7,8 +7,8 @@ jobs:
   terragrunt_deploy:
     runs-on: ubuntu-latest
     outputs:
-      bucket_name: ${{ steps.terragrunt_deploy.outputs.bucket_name }}
-      cloudfront_domain: ${{ steps.terragrunt_deploy.outputs.cloudfront_domain }}
+      bucket_name: ${{ steps.terragrunt_deploy.outputs.BUCKET_NAME }}
+      cloudfront_domain: ${{ steps.terragrunt_deploy.outputs.CLOUDFRONT_DOMAIN }}
     steps:
       - uses: actions/checkout@v2
       
@@ -34,13 +34,8 @@ jobs:
         id: terraform_output
         run: |
           cd ./terraform
-          echo "::set-output name=bucket_name::$(terragrunt output -raw s3_bucket_name)"
-          echo "::set-output name=cloudfront_domain::$(terragrunt output -raw cloudfront_distribution_domain_name)"
-
-      - name: Debug Outputs
-        run: |
-          echo "DEBUG - BUCKET_NAME: ${{ steps.terragrunt_deploy.outputs.bucket_name }}"
-          echo "DEBUG - CLOUDFRONT_DOMAIN: ${{ steps.terragrunt_deploy.outputs.cloudfront_domain }}"
+          echo " name=BUCKET_NAME::$(terragrunt output -raw s3_bucket_name)"
+          echo " name=CLOUDFRONT_DOMAIN::$(terragrunt output -raw cloudfront_distribution_domain_name)"
 
   run_python_script:
     needs: terragrunt_deploy
@@ -56,10 +51,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r ./python/requirements.txt
 
-      - name: Check Environment Variables
+      - name: Create Environment Variables
         run: |
-         echo "BUCKET_NAME: ${{ needs.terragrunt_deploy.outputs.bucket_name }}"
-         echo "CLOUDFRONT_DOMAIN: ${{ needs.terragrunt_deploy.outputs.cloudfront_domain }}"
+         echo "BUCKET_NAME: ${{ needs.terragrunt_deploy.outputs.BUCKET_NAME }}"
+         echo "CLOUDFRONT_DOMAIN: ${{ needs.terragrunt_deploy.outputs.CLOUDFRONT_DOMAIN }}"
 
       - name: Run Python Script
         run: python ./python/assignment-code.py
