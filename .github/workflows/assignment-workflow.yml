@@ -53,11 +53,13 @@ jobs:
 
       - name: Create Environment Variables
         run: |
-         echo "BUCKET_NAME: ${{ needs.terragrunt_deploy.outputs.BUCKET_NAME }}"
-         echo "CLOUDFRONT_DOMAIN: ${{ needs.terragrunt_deploy.outputs.CLOUDFRONT_DOMAIN }}"
+         echo "BUCKET_NAME= ${{ needs.terragrunt_deploy.outputs.BUCKET_NAME }}" >> $GITHUB_ENV
+         echo "CLOUDFRONT_DOMAIN= ${{ needs.terragrunt_deploy.outputs.CLOUDFRONT_DOMAIN }}" >> $GITHUB_ENV
 
       - name: Run Python Script
         run: python ./python/assignment-code.py
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          BUCKET_NAME: ${{ env.BUCKET_NAME }}
+          CLOUDFRONT_DOMAIN: ${{ env.CLOUDFRONT_DOMAIN }}
