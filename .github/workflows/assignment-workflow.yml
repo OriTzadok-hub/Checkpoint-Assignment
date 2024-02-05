@@ -24,10 +24,20 @@ jobs:
         with:
           terragrunt_version: '0.55.0' # Specify the version of Terragrunt you are using
 
-      - name: Terragrunt Init and Apply
+      - name: Terragrunt Init
         run: |
           cd ./terraform
           terragrunt init
+
+      - name: Terragrunt Plan
+        id: terragrunt_plan
+        run: |
+          cd ./terraform
+          terragrunt plan
+
+      - name: Terragrunt Apply
+        run: |
+          cd ./terraform
           terragrunt apply -auto-approve
 
       - name: Set Outputs
