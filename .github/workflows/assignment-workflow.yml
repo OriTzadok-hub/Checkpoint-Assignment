@@ -51,6 +51,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r ./python/requirements.txt
 
+      - name: Check Environment Variables
+        run: |
+         echo "BUCKET_NAME: $BUCKET_NAME"
+         echo "CLOUDFRONT_DOMAIN: $CLOUDFRONT_DOMAIN"
+
       - name: Run Python Script
         run: python ./python/assignment-code.py
         env:
