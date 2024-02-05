@@ -34,8 +34,8 @@ jobs:
         id: terraform_output
         run: |
           cd ./terraform
-          echo "bucket_name=$(terragrunt output -raw bucket_name)" >> $GITHUB_ENV
-          echo "cloudfront_domain=$(terragrunt output -raw cloudfront_domain)" >> $GITHUB_ENV
+          echo "bucket_name=$(terragrunt output -raw s3_bucket_name)" >> $GITHUB_ENV
+          echo "cloudfront_domain=$(terragrunt output -raw cloudfront_distribution_domain_name)" >> $GITHUB_ENV
 
   run_python_script:
     needs: terragrunt_deploy
