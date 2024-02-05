@@ -37,6 +37,11 @@ jobs:
           echo "::set-output name=bucket_name::$(terragrunt output -raw s3_bucket_name)"
           echo "::set-output name=cloudfront_domain::$(terragrunt output -raw cloudfront_distribution_domain_name)"
 
+      - name: Debug Outputs
+        run: |
+          echo "DEBUG - BUCKET_NAME: ${{ steps.terragrunt_deploy.outputs.bucket_name }}"
+          echo "DEBUG - CLOUDFRONT_DOMAIN: ${{ steps.terragrunt_deploy.outputs.cloudfront_domain }}"
+
   run_python_script:
     needs: terragrunt_deploy
     runs-on: ubuntu-latest 
