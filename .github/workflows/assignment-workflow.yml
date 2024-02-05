@@ -1,3 +1,30 @@
+# Workflow Name: Deploy Infrastructure and Run Python Script
+#
+# Description:
+# This workflow automates the deployment of infrastructure using Terragrunt and Terraform 
+# and then runs a Python script to perform post-deployment tasks. It is triggered manually 
+# via the GitHub Actions workflow_dispatch event.
+#
+# Workflow Steps:
+# 1. Checkout the repository to access its content.
+# 2. Configure AWS credentials for Terraform and Python script execution.
+# 3. Setup Terragrunt with a specified version.
+# 4. Initialize the Terragrunt configuration.
+# 5. Plan infrastructure changes to review potential modifications.
+# 6. Apply the planned infrastructure changes.
+# 7. Extract and set outputs from Terraform for use in subsequent steps.
+# 8. Setup Python environment.
+# 9. Install Python dependencies.
+# 10. Run a Python script with environmental variables based on Terraform outputs.
+#
+# Usage:
+# To run this workflow, trigger it manually through the GitHub UI under the Actions tab of your repository.
+#
+# Prerequisites:
+# - AWS credentials stored as GitHub Secrets.
+# - Terragrunt and Terraform configuration files in the ./terraform directory.
+# - A Python script and requirements.txt file in the ./python directory.
+
 name: Deploy Infrastructure and Run Python Script
 
 on:
@@ -11,6 +38,7 @@ jobs:
       cloudfront_domain: ${{ steps.terraform_output.outputs.CLOUDFRONT_DOMAIN }}
     steps:
       - uses: actions/checkout@v2
+        # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -18,49 +46,58 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-central-1
-
+        # Configures AWS credentials for use in this workflow
+      
       - name: Setup Terragrunt
         uses: autero1/action-terragrunt@v1.3.2
         with:
-          terragrunt_version: '0.55.0' # Specify the version of Terragrunt you are using
-
+          terragrunt_version: '0.55.0'
+        # Sets up a specific version of Terragrunt
+      
       - name: Terragrunt Init
         run: |
           cd ./terraform
           terragrunt init
-
+        # Initializes the Terragrunt configuration
+      
       - name: Terragrunt Plan
         id: terragrunt_plan
         run: |
           cd ./terraform
           terragrunt plan
-
+        # Displays the planned infrastructure changes without applying them
+      
       - name: Terragrunt Apply
         run: |
           cd ./terraform
           terragrunt apply -auto-approve
-
+        # Applies the planned infrastructure changes
+      
       - name: Set Outputs
         id: terraform_output
         run: |
           cd ./terraform
           echo "BUCKET_NAME=$(terragrunt output -raw s3_bucket_name)" >> "$GITHUB_OUTPUT"
           echo "CLOUDFRONT_DOMAIN=$(terragrunt output -raw cloudfront_distribution_domain_name)" >> "$GITHUB_OUTPUT"
+        # Sets the Terraform outputs as job outputs for use in subsequent jobs
 
   run_python_script:
     needs: terragrunt_deploy
     runs-on: ubuntu-latest 
     steps:
       - uses: actions/checkout@v2
-
+        # Re-checks-out the repository for the Python script execution
+      
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x' # Specify your Python version
-
+          python-version: '3.x'
+        # Sets up the Python environment
+      
       - name: Install dependencies
         run: pip install -r ./python/requirements.txt
-
+        # Installs Python dependencies from requirements.txt
+      
       - name: Run Python Script
         run: python ./python/assignment-code.py
         env:
@@ -68,3 +105,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           BUCKET_NAME: ${{ needs.terragrunt_deploy.outputs.bucket_name }}
           CLOUDFRONT_DOMAIN: ${{ needs.terragrunt_deploy.outputs.cloudfront_domain }}
+        # Executes the Python script with environment variables set from Terraform outputs
