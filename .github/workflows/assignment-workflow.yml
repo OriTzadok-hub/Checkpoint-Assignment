@@ -1,0 +1,60 @@
+name: Deploy Infrastructure and Run Python Script
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terragrunt_deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      bucket_name: ${{ steps.set_output.outputs.bucket_name }}
+      cloudfront_domain: ${{ steps.set_output.outputs.cloudfront_domain }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v1
+        with:
+          terragrunt_version: '0.55.0' # Specify the version of Terragrunt you are using
+
+      - name: Terragrunt Init and Apply
+        run: |
+          cd ./terraform
+          terragrunt init
+          terragrunt apply -auto-approve
+
+      - name: Set Outputs
+        id: set_output
+        run: |
+          echo "::set-output name=bucket_name::$(terragrunt output -raw bucket_name)"
+          echo "::set-output name=cloudfront_domain::$(terragrunt output -raw cloudfront_domain)"
+
+  run_python_script:
+    needs: terragrunt_deploy
+    runs-on: ubuntu-latest
+    env:
+      BUCKET_NAME: ${{ needs.terragrunt_deploy.outputs.bucket_name }}
+      CLOUDFRONT_DOMAIN: ${{ needs.terragrunt_deploy.outputs.cloudfront_domain }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x' # Specify your Python version
+
+      - name: Install dependencies
+        run: pip install -r ./python/requirements.txt
+
+      - name: Run Python Script
+        run: python path/to/your/script.py
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

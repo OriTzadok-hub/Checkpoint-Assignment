@@ -1,12 +1,13 @@
 import requests
 import boto3
+import os
 import json
 
 # Constants
 JSON_URL = 'https://dummyjson.com/products'
-S3_BUCKET_NAME = 'ori-assignment-bucket'
 FILE_NAME = 'filtered_products.json'
-CLOUDFRONT_DOMAIN = 'dvqlynkg72hxr.cloudfront.net'
+S3_BUCKET_NAME = os.environ.get('BUCKET_NAME', 'ori-assignment-bucket')
+CLOUDFRONT_DOMAIN = os.environ.get('CLOUDFRONT_DOMAIN', 'dvqlynkg72hxr.cloudfront.net')
 
 # A. Download JSON
 response = requests.get(JSON_URL)
