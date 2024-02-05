@@ -7,8 +7,8 @@ jobs:
   terragrunt_deploy:
     runs-on: ubuntu-latest
     outputs:
-      bucket_name: ${{ steps.set_output.outputs.bucket_name }}
-      cloudfront_domain: ${{ steps.set_output.outputs.cloudfront_domain }}
+      bucket_name: ${{ steps.terragrunt_deploy.outputs.bucket_name }}
+      cloudfront_domain: ${{ steps.terragrunt_deploy.outputs.cloudfront_domain }}
     steps:
       - uses: actions/checkout@v2
       
@@ -34,8 +34,8 @@ jobs:
         id: terraform_output
         run: |
           cd ./terraform
-          echo "bucket_name=$(terragrunt output -raw s3_bucket_name)" >> $GITHUB_ENV
-          echo "cloudfront_domain=$(terragrunt output -raw cloudfront_distribution_domain_name)" >> $GITHUB_ENV
+          echo "::set-output name=bucket_name::$(terragrunt output -raw s3_bucket_name)"
+          echo "::set-output name=cloudfront_domain::$(terragrunt output -raw cloudfront_distribution_domain_name)"
 
   run_python_script:
     needs: terragrunt_deploy
@@ -53,13 +53,11 @@ jobs:
 
       - name: Check Environment Variables
         run: |
-         echo "BUCKET_NAME: $BUCKET_NAME"
-         echo "CLOUDFRONT_DOMAIN: $CLOUDFRONT_DOMAIN"
+         echo "BUCKET_NAME: ${{ needs.terragrunt_deploy.outputs.bucket_name }}"
+         echo "CLOUDFRONT_DOMAIN: ${{ needs.terragrunt_deploy.outputs.cloudfront_domain }}"
 
       - name: Run Python Script
         run: python ./python/assignment-code.py
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          BUCKET_NAME: ${{ needs.terragrunt_deploy.outputs.bucket_name }}
-          CLOUDFRONT_DOMAIN: ${{ needs.terragrunt_deploy.outputs.cloudfront_domain }}
